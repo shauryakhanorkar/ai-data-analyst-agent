@@ -105,6 +105,65 @@ IMPORTANT INSTRUCTIONS
     return ask_gemini(prompt)
 
 
+def generate_business_summary(df=None):
+    """
+    Generate an AI-written business summary from Python-calculated
+    sales and profit insights.
+    """
+
+    if df is None:
+        df = load_data()
+
+    if df is None or df.empty:
+        raise ValueError("The dataset is empty or could not be loaded.")
+
+    insights = get_business_insights(df)
+
+    if not insights:
+        raise ValueError("No business insights could be calculated.")
+
+    prompt = f"""
+You are a professional business data analyst.
+
+Analyze the following calculated business insights and write a clear,
+well-formatted business performance summary.
+
+CALCULATED BUSINESS INSIGHTS:
+{insights}
+
+IMPORTANT FORMATTING RULES:
+1. Write in natural, professional English.
+2. Include normal spaces between every word.
+3. Put each paragraph on a separate line.
+4. Use Markdown headings and bullet points.
+5. Do not join words together.
+6. Do not remove spaces around numbers, punctuation, or currency values.
+7. Format numbers clearly, for example: $2,297,200.86.
+8. Do not put the entire response in one line.
+9. Do not use HTML tags.
+10. Do not invent or change any calculated figures.
+
+Use exactly these sections:
+
+## Overall Performance Summary
+Write one short paragraph about total sales, average sale value,
+total profit, and average profit if those figures are available.
+
+## Sales and Profit Findings
+- Category performance
+- Regional performance
+
+## Practical Recommendations
+Give up to three actionable recommendations supported by the data.
+
+## Important Limitations
+Mention what cannot be concluded from the available dataset.
+
+Return only the formatted Markdown summary.
+"""
+
+    return ask_gemini(prompt)
+
 if __name__ == "__main__":
 
     print("\nAI Data Analyst")

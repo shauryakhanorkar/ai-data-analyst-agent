@@ -2,7 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from src.ai_analyst import answer_question
+from src.ai_analyst import (
+    answer_question,
+    generate_business_summary,
+)
 
 from src.data_analyzer import (
     get_dataset_overview,
@@ -22,6 +25,8 @@ st.write(
     "Upload a dataset to explore its data quality, "
     "business metrics, and visualizations."
 )
+
+df = None
 
 uploaded_file = st.file_uploader(
     "Upload a CSV file",
@@ -89,6 +94,33 @@ if uploaded_file is not None:
         metric_col2.metric(
             "Total Profit",
             f"{insights['total_profit']:,.2f}",
+        )
+
+    
+    # AI-generated Business Summary
+    st.subheader("AI-Generated Business Summary")
+
+    if st.button("Generate Business Summary"):
+        with st.spinner("Generating business insights..."):
+            try:
+                summary = generate_business_summary(df)
+
+                st.session_state["business_summary"] = summary
+                st.session_state["summary_dataset"] = uploaded_file.name
+
+            except Exception as error:
+                st.error(f"Could not generate summary: {error}")
+
+    # Display only a summary generated for the current uploaded file
+    if (
+        st.session_state.get("summary_dataset") == uploaded_file.name
+        and st.session_state.get("business_summary")
+    ):
+        summary = st.session_state["business_summary"]
+        
+        st.markdown(
+            summary,
+            unsafe_allow_html=False,
         )
 
     # Charts
@@ -210,12 +242,12 @@ else:
     st.info("Upload your sample_sales.csv file to begin.")
     
 
+
 # -------------------------------
 # AI DATA ANALYST
 # -------------------------------
 
 st.divider()
-
 st.subheader("Ask the AI Data Analyst")
 
 st.write(
@@ -229,13 +261,14 @@ question = st.text_input(
 )
 
 if st.button("Ask AI Analyst", type="primary"):
+    if df is None:
+        st.warning("Please upload a CSV file first.")
 
-    if not question.strip():
+    elif not question.strip():
         st.warning("Please enter a question first.")
 
     else:
         with st.spinner("Analyzing your data..."):
-
             try:
                 answer = answer_question(question, df=df)
 
@@ -246,4 +279,5 @@ if st.button("Ask AI Analyst", type="primary"):
                 st.error(
                     f"Unable to answer your question: {error}"
                 )
+
     
